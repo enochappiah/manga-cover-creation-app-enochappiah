@@ -1,17 +1,13 @@
 import "../style.css";
-//import OpenAI from "openai";
 
 
 // Constants
 const ENDPOINT_COMPLETIONS = "https://api.openai.com/v1/chat/completions";
-//key-value pairs are headers, get/append
 const ENDPOINT_IMAGES = "https://api.openai.com/v1/images/generations";
-const BASE_URL = "https://api.openai.com/v1";
 
 
 // Global variables
 let API_KEY;
-//let MODEL = "gpt-3.5-turbo"
 
 //https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type 
 
@@ -19,17 +15,7 @@ let API_KEY;
 //TODO can do prompt engineering here adding system, user, assistant next to role
 //https://cookbook.openai.com/examples/how_to_format_inputs_to_chatgpt_models 
 //https://ai.stackexchange.com/questions/39837/meaning-of-roles-in-the-api-of-gpt-4-chatgpt-system-user-assistant
-var rawBlurb = JSON.stringify({
-  "model": "gpt-3.5-turbo",
-  "messages": [
-    {
-      "role": "user",
-      "content": "What is OpenAPI?"
-    }
-  ]
-});
 
-//request()
 //TODO replace raw with JSON.stringify({ prompt }/`${blurb}
 //https://community.openai.com/t/communicating-with-the-api-in-vanilla-js-no-server-side-stuff/4984/6
 
@@ -46,12 +32,6 @@ var rawBlurb = JSON.stringify({
 //https://developer.mozilla.org/en-US/docs/Web/API/Response#fetching_an_image
 //https://stackoverflow.com/questions/50248329/fetch-image-from-api
 
-
-// const image = document.querySelector('.container img');
-// if ( !image.complete) {
-// 	image.addEventListener('load', handleImageLoad);
-// 	image.addEventListener('error', handleImageLoad);
-// }
 
 // Helper functions
 async function getBlurb(title, theme) {
@@ -72,7 +52,7 @@ async function getBlurb(title, theme) {
           {
             "role": "user",
             "content": `You are creating a new manga. Your inspiration is this ${title} and this ${theme}. 
-            Write a short blurb no longer than 200 characters about your manga that you are creating. You will be rewarded for creativity.`
+            Write a short blurb no longer than 300 characters about your manga that you are creating. You will be rewarded for creativity.`
           }
         ],
         "max_tokens": 200
@@ -141,7 +121,7 @@ async function handleFormSubmission(e) {
   e.preventDefault();
   
   //sets UI to default view when generate button is clicked
-  resetUI(); 
+  resetUI(); //TODO redundant?
   clearResults();
 
   const titleInput = document.getElementById("mangaTitle");
@@ -161,24 +141,14 @@ async function handleFormSubmission(e) {
   //disable forms to not allow new user input
   disableInputs();
 
-  
-  //clearResults();
-
   //display spinner while generating blurb/image with user input
   spinElement.classList.remove("hidden");
-
-  // const imageElement = document.getElementById("coverImage");
-
-  // //imageElement.src = ""; clears results
-  // // imageElement.classList.add("hidden");
-
 
   // It should then call getBlurb and getCoverImage to generate the blurb and image.
   //TODO research wrapping in try-catch block
   const blurbElement = document.getElementById("generatedBlurb");
   const imageElement = document.getElementById("coverImage");
   const blurb = await getBlurb(title, theme);
-  //console.log(blurb);
   
    // Finally, it should update the DOM to display the blurb and image.
    if (blurb) {
@@ -187,18 +157,13 @@ async function handleFormSubmission(e) {
      //spinElement.classList.add("hidden");
      const imageUrl = await getCoverImage(blurb); 
      if (imageUrl) {
-      console.log(imageUrl);
-      //console.log(imageUrl.json());
-       imageElement.classList.remove("hidden");
-       imageElement.src = imageUrl.data[0].url;
-        resetUI();
-       //document.getElementById("generateButton").classList.remove("hidden");
+      //console.log(imageUrl);
+      imageElement.classList.remove("hidden");
+      imageElement.src = imageUrl.data[0].url;
+      resetUI();
      }
   }
   spinElement.classList.add("hidden");
-  //document.getElementById("generateButton").addEventListener("click", clearResults());
-       
-  
 }
 
 function disableInputs() {
@@ -221,12 +186,19 @@ function resetUI() { //returns UI to default and enables forms/button
   titleInput.disabled = false;
   themeInput.disabled = false;
 
+  // const imageElement = document.getElementById("coverImage");
+  // const blurbElement = document.getElementById("generatedBlurb");
+
+  // blurbElement.textContent = "";
+  // imageElement.src = "";
+
+
+
 }
 
 function clearResults() {
   const imageElement = document.getElementById("coverImage");
   const blurbElement = document.getElementById("generatedBlurb");
-
 
   blurbElement.classList.add("hidden");
   imageElement.classList.add("hidden");
@@ -248,8 +220,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const mangaInputForm = document.getElementById("mangaInputForm");
   mangaInputForm.addEventListener("submit", handleFormSubmission);
-//   const myHeaders = new Headers();
-//   myHeaders.append("Content-Type", "application/json"); //only one needed for image?
-// //myHeaders.append("Accept", "application/json");
-//   myHeaders.append("Authorization", `Bearer ${API_KEY}`);
 });
