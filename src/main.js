@@ -83,7 +83,7 @@ async function getCoverImage(blurb) {
   // You should use the global API_KEY variable to authenticate your request.
   // You must use fetch to make the request.
   try {
-    var imageUrl = await fetch(`${ENDPOINT_IMAGES}`, {
+    var imageUrl = await fetch(`${ENDPOINT_IMAGES}`, { //const -> var
       method: "POST",
       headers: {
         Authorization: `Bearer ${API_KEY}`,
