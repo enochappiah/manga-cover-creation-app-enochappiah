@@ -14,10 +14,7 @@ let API_KEY;
 //let MODEL = "gpt-3.5-turbo"
 
 //https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type 
-var myHeaders = new Headers();
-myHeaders.append("Content-Type", "application/json"); //only one needed for image?
-myHeaders.append("Accept", "application/json");
-myHeaders.append("Authorization", `Bearer ${API_KEY}`);
+
 
 //TODO can do prompt engineering here adding system, user, assistant next to role
 //https://cookbook.openai.com/examples/how_to_format_inputs_to_chatgpt_models 
@@ -35,43 +32,10 @@ var rawBlurb = JSON.stringify({
 //request()
 //TODO replace raw with JSON.stringify({ prompt }/`${blurb}
 //https://community.openai.com/t/communicating-with-the-api-in-vanilla-js-no-server-side-stuff/4984/6
-var blurbRequestOptions = {
-  method: 'POST',
-  headers: myHeaders,
-  body: rawBlurb, 
-  redirect: 'follow'
-};
-
-var imageRequestOptions = {
-  method: 'POST',
-  headers: myHeaders,
-  body: imageArgs,
-  redirect: 'follow'
-};
 
 //TODO for image creation, research 
 //https://stackoverflow.com/questions/48284011/how-to-post-image-with-fetch
 //https://github.com/sonnysangha/AI-Image-generator-microsoft-azure/blob/main/azure/src/functions/generateImage.js
-
-var imageArgs = JSON.stringify({
-  "prompt": "blurb", //TODO replace with ${blurb} ?
-  "n": 1,
-  "size": "1024x1024"
-});
-
-// var requestOptions = {
-//   method: 'POST',
-//   headers: myHeaders,
-//   body: raw,
-//   redirect: 'follow'
-// };
-
-// fetch("https://api.openai.com/v1/images/generations", requestOptions)
-//   .then(response => response.text())
-//   .then(result => console.log(result))
-//   .catch(error => console.log('error', error));
-
-
 
 
 //TODO how to print content from reponse/fetch
@@ -93,58 +57,82 @@ var imageArgs = JSON.stringify({
 async function getBlurb(title, theme) {
   // TODO Implement TITLE AND THEME INTO FETCH/REQUEST
   // Use the OpenAI API to generate a blurb based on the title and theme.
-  //fetch(`${BASE_URL}/chat/completions?apikey=${API_KEY}&q=${city}`)
-  // fetch(`${ENDPOINT_COMPLETIONS}`, blurbRequestOptions) //TODO replace var 
+   // You should use the global API_KEY variable to authenticate your request.
+  // You must use fetch to make the request.
   try {
-    const blurb = fetch(`${ENDPOINT_COMPLETIONS}`, { //TODO should I add await?
-      method: 'POST',
-      headers: myHeaders,
+    var blurb = await fetch(`${ENDPOINT_COMPLETIONS}`, { //TODO should I add await?
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        "Content-Type" : "application/json"
+      },//myHeaders,
       body: JSON.stringify({
         "model": "gpt-3.5-turbo",
         "messages": [
           {
             "role": "user",
-            "content": `You are a mangaka creating a new manga. Your inspiration is this ${title} and this ${theme}. 
-            Write a short blurb about your manga that you are creating. You will be rewarded for creativity.`
+            "content": `You are creating a new manga. Your inspiration is this ${title} and this ${theme}. 
+            Write a short blurb no longer than 200 characters about your manga that you are creating. You will be rewarded for creativity.`
           }
-        ]
+        ],
+        "max_tokens": 200
       }), 
     })
-    return blurb.choices.message; //TODO undefined
+    .then (response => response.json())
+    .then(json => 
+      //console.log(json.choices[0].message.content);
+      blurb = json.choices[0].message.content
+      //return json.choices[0].message.content
+    );
+      return blurb;
+    
+  // You should return the generated blurb.
+    // console.log(blurb.choices[0].message.content);
+    // return blurb.choices[0].message.content;  //blurb["choices"][0]["message"]["content"]
   } catch(error) {
   console.error("Error fetching blurb:", error);
   alert("An error occured while generating the blurb. Please try again.")
   return null;
   };
-  // You should use the global API_KEY variable to authenticate your request.
-  // You must use fetch to make the request.
-  // You should return the generated blurb.
+
 }
 
 async function getCoverImage(blurb) {
   // TODO Implement BLURB INTO FETCH/REQUEST!
   // Use the OpenAI API to generate a cover image based on the blurb.
   // You should use the global API_KEY variable to authenticate your request.
-
-  fetch(`${ENDPOINT_IMAGES}`, imageRequestOptions) //imageRequestOptions is this needed?
-  .then(response => {
-    return objectURL = response.data.url; //TODO response.data is undefined
+  // You must use fetch to make the request.
+  try {
+    var imageUrl = await fetch(`${ENDPOINT_IMAGES}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        "Content-Type" : "application/json"
+      },//myHeaders,
+      body: JSON.stringify({
+        "prompt": `Create a fascinating image relating to this ${blurb}. It should look like manga art or comic book art.`, 
+        "n": 1,
+        "size": "1024x1024"
+      }), 
   })
-
-
-  // .then((blob) => {
-  //   const objectURL = URL.createObjectURL(blob);
-  // })
-  .then(result => console.log(result))
-  .catch(error => {
+  // You should return the URL of the generated image.
+  // .then(response => response.json())
+  // .then(json => {
+  //   console.log(json.data);
+  //   imageUrl = json.data.url;
+  // });
+  //console.log(JSON.parse(imageUrl.json()));
+  //console.log(imageUrl.json());
+  return (await imageUrl.json()); //(await imageUrl.json());
+} catch(error) {
   console.error("Error fetching image:", error);
   alert("An error occured while generating the image. Please try again.")
   return null;
-  });
-  // You must use fetch to make the request.
-  // You should return the URL of the generated image.
-  return objectURL; //TODO undefined
+  };
+  
+  
 }
+
 
 // Event handlers
 async function handleFormSubmission(e) {
@@ -152,57 +140,100 @@ async function handleFormSubmission(e) {
   // This function is called when the form is submitted.
   e.preventDefault();
   
-  const generateBtn = document.getElementById("generateButton");
-  const spinElement = document.getElementById("spinner"); 
-  const titleElement = document.getElementById("mangaTitle");
-  const themeElement = document.getElementById("mangaTheme");
-  const imageElement = document.getElementById("coverImage");
+  //sets UI to default view when generate button is clicked
+  resetUI(); 
+  clearResults();
 
-  //TODO check if form has input that is not empty
-  if (titleElement.value.trim() === "" || themeElement.value.trim() === "") {
+  const titleInput = document.getElementById("mangaTitle");
+  const themeInput = document.getElementById("mangaTheme");
+  const spinElement = document.getElementById("spinner"); 
+
+  if (titleInput.value.trim() === "" || themeInput.value.trim() === "") {
     alert(
       "Please complete both forms.");
       return;
-  } 
-  titleElement.disabled = true;
-  themeElement.disabled = true;
- 
-  
-
-  generateBtn.classList.add("hidden");
-  spinElement.classList.remove("hidden");
-  spinElement.classList.remove("hidden"); //TODO figure out how to end animation docs  
+  }
 
   // It should get the title and theme from the form.
-  const title = titleElement.value.trim();
-  titleElement.value = "";
-  const theme = themeElement.value.trim();
-  themeElement.value = "";
-  imageElement.src = "";
+  const title = titleInput.value.trim();
+  const theme = themeInput.value.trim();
 
+  //disable forms to not allow new user input
+  disableInputs();
+
+  
+  //clearResults();
+
+  //display spinner while generating blurb/image with user input
+  spinElement.classList.remove("hidden");
+
+  // const imageElement = document.getElementById("coverImage");
+
+  // //imageElement.src = ""; clears results
+  // // imageElement.classList.add("hidden");
 
 
   // It should then call getBlurb and getCoverImage to generate the blurb and image.
   //TODO research wrapping in try-catch block
   const blurbElement = document.getElementById("generatedBlurb");
+  const imageElement = document.getElementById("coverImage");
   const blurb = await getBlurb(title, theme);
-  blurbElement.innerHTML = blurb;
+  //console.log(blurb);
   
-
-  const imageUrl = await getCoverImage(blurb); 
-  imageElement.src = imageUrl;
-
-  if (imageUrl) {
-    spinElement.classList.remove("hidden");
+   // Finally, it should update the DOM to display the blurb and image.
+   if (blurb) {
+     blurbElement.classList.remove("hidden");
+     blurbElement.textContent = blurb;
+     //spinElement.classList.add("hidden");
+     const imageUrl = await getCoverImage(blurb); 
+     if (imageUrl) {
+      console.log(imageUrl);
+      //console.log(imageUrl.json());
+       imageElement.classList.remove("hidden");
+       imageElement.src = imageUrl.data[0].url;
+        resetUI();
+       //document.getElementById("generateButton").classList.remove("hidden");
+     }
   }
-
-
-  // Finally, it should update the DOM to display the blurb and image.
-
+  spinElement.classList.add("hidden");
+  //document.getElementById("generateButton").addEventListener("click", clearResults());
+       
   
-  
+}
 
-  updateUI(blurb, imageElement); //TODO make function refactoring lines43- 46
+function disableInputs() {
+  const generateBtn = document.getElementById("generateButton");
+  const titleInput = document.getElementById("mangaTitle");
+  const themeInput = document.getElementById("mangaTheme");
+
+  generateBtn.classList.add("hidden");
+  titleInput.disabled = true;
+  themeInput.disabled = true;
+
+}
+
+function resetUI() { //returns UI to default and enables forms/button
+  const generateBtn = document.getElementById("generateButton");
+  const titleInput = document.getElementById("mangaTitle");
+  const themeInput = document.getElementById("mangaTheme");
+
+  generateBtn.classList.remove("hidden");
+  titleInput.disabled = false;
+  themeInput.disabled = false;
+
+}
+
+function clearResults() {
+  const imageElement = document.getElementById("coverImage");
+  const blurbElement = document.getElementById("generatedBlurb");
+
+
+  blurbElement.classList.add("hidden");
+  imageElement.classList.add("hidden");
+ 
+  blurbElement.textContent = "";
+  imageElement.src = "";
+
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -217,4 +248,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const mangaInputForm = document.getElementById("mangaInputForm");
   mangaInputForm.addEventListener("submit", handleFormSubmission);
+//   const myHeaders = new Headers();
+//   myHeaders.append("Content-Type", "application/json"); //only one needed for image?
+// //myHeaders.append("Accept", "application/json");
+//   myHeaders.append("Authorization", `Bearer ${API_KEY}`);
 });
