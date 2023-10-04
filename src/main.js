@@ -43,7 +43,7 @@ async function getBlurb(title, theme) {
     var blurb = await fetch(`${ENDPOINT_COMPLETIONS}`, { //TODO should I add await?
       method: "POST",
       headers: {
-        Authorization: `Bearer ${API_KEY}`,
+        Authorization: `Bearer 122${API_KEY}`,
         "Content-Type" : "application/json"
       },//myHeaders,
       body: JSON.stringify({
@@ -58,19 +58,46 @@ async function getBlurb(title, theme) {
         "max_tokens": 200
       }), 
     })
-    .then (response => response.json())
-    .then(json => 
-      //console.log(json.choices[0].message.content);
-      blurb = json.choices[0].message.content
-      //return json.choices[0].message.content
-    );
-      return blurb;
+  
+    //TODO API ERROR CHECKING
+
+    if(blurb.status !== 200) {
+      console.error("API Error:", (await blurb.json()).error.message);
+      alert("An error occured while fetching the image. Please read the error message in the console and try again.");
+      return;
+    }
+    // .then (response => {
+    //   if (response.status != 200) {
+    //     // console.error("API Error:", response.status.error.message); 
+    //     console.error("API Error:");
+    //     return;
+    //   }
+    //   response.json();
+    // }) 
+    // .then (response => response.json())
+   
+    // .then(json => 
+    //   //console.log(json.choices[0].message.content);
+    //   blurb = json.choices[0].message.content
+    //   //return json.choices[0].message.content
+    // );
+    // if (response.ok !== 200) {
+    //   console.error("API Error:", response.error.message);
+    //   return;
+    // }
+
+      return (await blurb.json()).choices[0].message.content;
+      
     
   // You should return the generated blurb.
     // console.log(blurb.choices[0].message.content);
     // return blurb.choices[0].message.content;  //blurb["choices"][0]["message"]["content"]
-  } catch(error) {
-  console.error("Error fetching blurb:", error);
+    
+  } catch(e) {
+  // if (e instanceof "invalid_request_error") {
+  //   console.error("API Error:", e.error.message);
+  // }
+  console.error("Error fetching blurb:", e);
   alert("An error occured while generating the blurb. Please try again.")
   return null;
   };
@@ -103,9 +130,17 @@ async function getCoverImage(blurb) {
   // });
   //console.log(JSON.parse(imageUrl.json()));
   //console.log(imageUrl.json());
-  return (await imageUrl.json()); //(await imageUrl.json());
-} catch(error) {
-  console.error("Error fetching image:", error);
+  if(imageUrl.status !== 200) {
+    //const e = await imageUrl.json();
+    console.error("API Error:", (await imageUrl.json()).error.message);
+    alert("An error occured while fetching the image. Please read the error message and try again.");
+    return;
+  }
+
+  //TODO API ERROR CHECKING?
+  return (await imageUrl.json()).data[0].url; //(await imageUrl.json());
+} catch(e) {
+  console.error("Error fetching image:", e);
   alert("An error occured while generating the image. Please try again.")
   return null;
   };
@@ -149,6 +184,7 @@ async function handleFormSubmission(e) {
   const blurbElement = document.getElementById("generatedBlurb");
   const imageElement = document.getElementById("coverImage");
   const blurb = await getBlurb(title, theme);
+  //const blurb = blurbObj.choices[0].message.content;
   
    // Finally, it should update the DOM to display the blurb and image.
    if (blurb) {
@@ -159,7 +195,7 @@ async function handleFormSubmission(e) {
      if (imageUrl) {
       //console.log(imageUrl);
       imageElement.classList.remove("hidden");
-      imageElement.src = imageUrl.data[0].url;
+      imageElement.src = imageUrl; //.data[0].url
       resetUI();
      }
   }
