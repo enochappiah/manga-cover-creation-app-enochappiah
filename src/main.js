@@ -28,15 +28,16 @@ async function getBlurb(title, theme) {
         messages: [
           {
             role: "user",
-            content: `You are creating a new manga. Your inspiration is this ${title} and this ${theme}. 
-            Write a short blurb no longer than 300 characters about your manga that you are creating. You will be rewarded for creativity.`,
+            content: `You are creating a new manga or comic book. Using this ${title} and ${theme}, you will 
+            write a short blurb no more than 300 characters about your manga that you are creating. Your focus is on 
+            making it sound like a blurb of a cartoon or comic. It should be gimicky, funny, and creative.`,
           },
         ],
         max_tokens: 200,
       }),
     });
 
-    if (blurb.status !== 200) {
+    if (!blurb.ok) {
       console.error("API Error:", (await blurb.json()).error.message);
       alert(
         "An error occured while fetching the image. Please read the error message in the console and try again.",
@@ -71,7 +72,7 @@ async function getCoverImage(blurb) {
       }),
     });
 
-    if (imageUrl.status !== 200) {
+    if (!imageUrl.ok) {
       console.error("API Error:", (await imageUrl.json()).error.message);
       alert(
         "An error occured while fetching the image. Please read the error message in the console.",
