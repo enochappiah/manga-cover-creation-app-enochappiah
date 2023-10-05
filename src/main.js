@@ -7,10 +7,6 @@ const ENDPOINT_IMAGES = "https://api.openai.com/v1/images/generations";
 // Global variables
 let API_KEY;
 
-//TODO can do prompt engineering here adding system, user, assistant next to role
-//https://cookbook.openai.com/examples/how_to_format_inputs_to_chatgpt_models
-//https://ai.stackexchange.com/questions/39837/meaning-of-roles-in-the-api-of-gpt-4-chatgpt-system-user-assistant
-
 // Helper functions
 async function getBlurb(title, theme) {
   // Use the OpenAI API to generate a blurb based on the title and theme.
